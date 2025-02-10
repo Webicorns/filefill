@@ -26,17 +26,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ShowDeleteFiles extends AbstractFormElement
 {
-    /**
-     * Container objects give $nodeFactory down to other containers.
-     *
-     * @param FileRepository $fileRepository
-     * @param LanguageService $languageService
-     */
-    public function __construct(
-        protected readonly FileRepository $fileRepository,
-        protected readonly LanguageService $languageService
-    ) {
-    }
+
 
     /**
      * @return array
@@ -44,8 +34,9 @@ class ShowDeleteFiles extends AbstractFormElement
     public function render(): array
     {
         $result = $this->initializeResultArray();
-
-        $rows = $this->fileRepository->countByIdentifier($this->data['vanillaUid']);
+        $languageService = $this->instanceLanguageService();
+        $fileRepository = GeneralUtility::makeInstance(FileRepository::class);
+        $rows = $fileRepository->countByIdentifier($this->data['vanillaUid']);
 
         // TODO https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/13.0/Breaking-97330-FormEngineElementClassesMustCreateLabelOrLegend.html
 
@@ -54,7 +45,7 @@ class ShowDeleteFiles extends AbstractFormElement
 
         if (empty($rows)) {
             $html[] = '<span class="badge badge-success">'
-                . $this->languageService->sL('LLL:EXT:filefill/Resources/Private/Language/locallang_db.xlf:sys_file_storage.filefill.no_delete')
+                . $languageService->sL('LLL:EXT:filefill/Resources/Private/Language/locallang_db.xlf:sys_file_storage.filefill.no_delete')
                 . '</span>';
         } else {
             $iconFactory = GeneralUtility::makeInstance(IconFactory::class);
@@ -65,9 +56,9 @@ class ShowDeleteFiles extends AbstractFormElement
                 $html[] = '<a class="btn btn-default t3js-editform-submitButton" data-name="_save_tx_filefill_delete" data-form="EditDocumentController" data-value="' . $row['tx_filefill_identifier'] . '">';
                 $html[] = $iconFactory->getIcon('actions-edit-delete', IconSize::SMALL);
                 $html[] = ' ' . sprintf(
-                    $this->languageService->sL('LLL:EXT:filefill/Resources/Private/Language/locallang_db.xlf:sys_file_storage.filefill.delete_files'),
+                    $languageService->sL('LLL:EXT:filefill/Resources/Private/Language/locallang_db.xlf:sys_file_storage.filefill.delete_files'),
                     $row['count'],
-                    $this->languageService->sL($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['filefill']['resourceHandler'][$row['tx_filefill_identifier']]['title'] ?? $row['tx_filefill_identifier'])
+                    $languageService->sL($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['filefill']['resourceHandler'][$row['tx_filefill_identifier']]['title'] ?? $row['tx_filefill_identifier'])
                 );
                 $html[] = '</a>';
             }
@@ -77,5 +68,9 @@ class ShowDeleteFiles extends AbstractFormElement
         $result['html'] = implode('', $html);
 
         return $result;
+    }
+    private function instanceLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
     }
 }
